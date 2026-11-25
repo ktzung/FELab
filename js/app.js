@@ -16,6 +16,8 @@
     scenarioId: null,
     tab: "terminal",
     ghTab: "issues",
+    previewPath: null,
+    previewWidth: "auto",
     role: "minh",
     hints: 0,
     drawer: false,
@@ -262,7 +264,7 @@
       '<section class="hero">' +
       '<div class="hero-copy"><p class="eyebrow">CSE122 · Thực hành cộng tác</p>' +
       '<h1>Mộc Coffee: làm web nhóm<br><span>bằng Git và GitHub</span></h1>' +
-      '<p class="hero-lede">Một website sáu trang, ba người thật, mười lăm tình huống thật. Bạn nhận vai, gõ lệnh trong kho mô phỏng, dựng HTML/CSS/JS, mở pull request, review chéo và phát hành — tất cả ngay trên trình duyệt.</p>' +
+      '<p class="hero-lede">Một website sáu trang, ba người thật, mười lăm tình huống thật. Bạn nhận vai, gõ lệnh trong kho mô phỏng, dựng HTML/CSS/JS, xem trước trang Mộc Coffee, mở pull request, review chéo và phát hành — tất cả ngay trên trình duyệt.</p>' +
       '<div class="hero-actions"><a class="btn primary big" href="#/lab/' + (state.lastId || "s01") + '">' + (state.lastId ? "Học tiếp " + esc(state.lastId.toUpperCase()) : "Bắt đầu kịch bản 01") + "</a>" +
       '<a class="btn ghost big" href="#/conventions">Xem phân công</a></div>' +
       '<div class="progress-line"><div class="progress-track"><span style="width:' + Math.round((done / SCENARIOS.length) * 100) + '%"></span></div>' +
@@ -529,7 +531,7 @@
     return [
       { kind: "system", text: "FELab · " + current.id.toUpperCase() + " — " + current.title },
       { kind: "system", text: "Module " + module.order + ": " + module.title + " · vai mặc định " + TEAM[current.role].name + " (" + TEAM[current.role].role + ")" },
-      { kind: "info", text: "Gõ help để xem phạm vi lệnh. Tab Files có trình sửa tệp; tab GitHub xem issue, PR, CI." },
+      { kind: "info", text: "Gõ help để xem phạm vi lệnh. Tab Files có trình sửa tệp; tab Xem trước hiện trang Mộc Coffee; tab GitHub xem issue, PR, CI." },
       { kind: "muted", text: "Mục tiêu: " + current.brief }
     ];
   }
@@ -540,6 +542,8 @@
     state.tab = "terminal";
     state.ghTab = "issues";
     state.hints = 0;
+    state.previewPath = null;
+    state.previewWidth = "auto";
     state.editor = { path: null, dirty: false };
     state.selectedCommit = null;
     state.solutionBusy = false;
@@ -725,6 +729,7 @@
       '<div class="lab-body"><div class="lab-work"><nav class="work-tabs" role="tablist">' +
       '<button type="button" role="tab" id="tab-terminal" aria-controls="pane-terminal" data-tab="terminal">Terminal</button>' +
       '<button type="button" role="tab" id="tab-files" aria-controls="pane-files" data-tab="files">Files <span class="tab-count" id="fileCount">0</span></button>' +
+      '<button type="button" role="tab" id="tab-preview" aria-controls="pane-preview" data-tab="preview">Xem trước</button>' +
       '<button type="button" role="tab" id="tab-graph" aria-controls="pane-graph" data-tab="graph">Sơ đồ</button>' +
       '<button type="button" role="tab" id="tab-github" aria-controls="pane-github" data-tab="github">GitHub <span class="tab-count" id="ghCount">0</span></button>' +
       '<button type="button" role="tab" id="tab-settings" aria-controls="pane-settings" data-tab="settings">Settings</button>' +
@@ -742,6 +747,7 @@
       '<section class="pane pane-files" id="pane-files" role="tabpanel" aria-labelledby="tab-files" data-pane="files" hidden><div class="files-layout">' +
       '<div class="file-rail"><div class="file-tools"><strong>Thư mục làm việc</strong><button type="button" class="icon-btn" id="newFileBtn">Tệp mới</button></div><ul class="file-tree" id="fileTree"></ul></div>' +
       '<div class="editor" id="editor"></div></div></section>' +
+      '<section class="pane pane-preview" id="pane-preview" role="tabpanel" aria-labelledby="tab-preview" data-pane="preview" hidden><div class="preview-pane" id="previewPane"></div></section>' +
       '<section class="pane pane-graph" id="pane-graph" role="tabpanel" aria-labelledby="tab-graph" data-pane="graph" hidden><div class="graph-pane" id="graphPane"></div></section>' +
       '<section class="pane pane-github" id="pane-github" role="tabpanel" aria-labelledby="tab-github" data-pane="github" hidden><div class="github-pane"><nav class="gh-tabs" id="ghTabs"></nav><div class="gh-body" id="ghBody"></div></div></section>' +
       '<section class="pane pane-settings" id="pane-settings" role="tabpanel" aria-labelledby="tab-settings" data-pane="settings" hidden><div class="settings-pane" id="settingsPane"></div></section>' +
@@ -828,6 +834,31 @@
           const dot = document.getElementById("editorDirty");
           if (dot) dot.hidden = false;
         }
+      });
+    }
+
+    const previewPane = document.getElementById("previewPane");
+    if (previewPane) {
+      previewPane.addEventListener("change", (event) => {
+        if (event.target && event.target.id === "previewPage") {
+          state.previewPath = event.target.value;
+          renderPreviewPane();
+        }
+      });
+      previewPane.addEventListener("click", (event) => {
+        const width = event.target.closest("[data-preview-width]");
+        if (width) {
+          state.previewWidth = width.getAttribute("data-preview-width");
+          const frame = document.getElementById("previewFrame");
+          if (frame) frame.setAttribute("data-width", state.previewWidth);
+          $$("[data-preview-width]", previewPane).forEach((button) => {
+            const active = button.getAttribute("data-preview-width") === state.previewWidth;
+            button.classList.toggle("active", active);
+            button.setAttribute("aria-pressed", active ? "true" : "false");
+          });
+          return;
+        }
+        if (event.target.closest("#previewReload")) renderPreviewPane();
       });
     }
 
@@ -1001,6 +1032,7 @@
   function renderActivePane() {
     if (state.tab === "terminal") { renderTerminal(); return; }
     if (state.tab === "files") { renderFilesPane(); return; }
+    if (state.tab === "preview") { renderPreviewPane(); return; }
     if (state.tab === "graph") { renderGraphPane(); return; }
     if (state.tab === "github") { renderGhPane(); return; }
     if (state.tab === "settings") { renderSettingsPane(); }
@@ -1121,6 +1153,107 @@
       refreshLab({ fromCommand: false });
       renderFilesPane();
     });
+  }
+
+  /* ---------------- Xem trước ---------------- */
+
+  const PREVIEW_RUNTIME_JS =
+    "(function () {\n" +
+    "  document.addEventListener('click', function (event) {\n" +
+    "    var link = event.target.closest && event.target.closest('a[data-preview-link]');\n" +
+    "    if (!link) return;\n" +
+    "    event.preventDefault();\n" +
+    "    parent.postMessage({ type: 'felab:preview-nav', path: link.getAttribute('data-preview-link') }, '*');\n" +
+    "  }, true);\n" +
+    "})();\n";
+
+  function localRef(value) {
+    const raw = String(value == null ? "" : value).trim();
+    if (!raw || /^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(raw) || raw.charAt(0) === "/") return null;
+    const path = raw.split("#")[0].split("?")[0].replace(/^\.\//, "");
+    if (!path || path.indexOf("..") > -1) return null;
+    return path;
+  }
+
+  function localPageRef(value) {
+    const path = localRef(value);
+    return path && /\.html?$/i.test(path) ? path : null;
+  }
+
+  function previewPages() {
+    return Object.keys(sim.worktree).filter((path) => /\.html?$/i.test(path)).sort((a, b) => {
+      if (a === "index.html") return -1;
+      if (b === "index.html") return 1;
+      return a.localeCompare(b);
+    });
+  }
+
+  function buildPreviewDocument(path) {
+    const source = sim.worktree[path] == null ? "" : String(sim.worktree[path]);
+    const missing = [];
+    const doc = new DOMParser().parseFromString(source, "text/html");
+    doc.querySelectorAll("link[href]").forEach((node) => {
+      if (!/(^|\s)stylesheet(\s|$)/i.test(node.getAttribute("rel") || "")) return;
+      const ref = localRef(node.getAttribute("href"));
+      if (!ref) return;
+      if (sim.worktree[ref] === undefined) { missing.push(ref); node.remove(); return; }
+      const style = doc.createElement("style");
+      style.setAttribute("data-preview-asset", ref);
+      style.textContent = String(sim.worktree[ref]).replace(/<\/style/gi, "<\\/style");
+      node.replaceWith(style);
+    });
+    doc.querySelectorAll("script[src]").forEach((node) => {
+      const ref = localRef(node.getAttribute("src"));
+      if (!ref) return;
+      if (sim.worktree[ref] === undefined) { missing.push(ref); node.remove(); return; }
+      const inline = doc.createElement("script");
+      inline.textContent = String(sim.worktree[ref]).replace(/<\/script/gi, "<\\/script");
+      node.replaceWith(inline);
+    });
+    doc.querySelectorAll("a[href]").forEach((node) => {
+      const ref = localPageRef(node.getAttribute("href"));
+      if (!ref || sim.worktree[ref] === undefined) return;
+      node.setAttribute("href", "#");
+      node.setAttribute("data-preview-link", ref);
+    });
+    const runtime = doc.createElement("script");
+    runtime.textContent = PREVIEW_RUNTIME_JS;
+    if (doc.body) doc.body.appendChild(runtime);
+    else doc.documentElement.appendChild(runtime);
+    return { html: "<!doctype html>\n" + doc.documentElement.outerHTML, missing: Array.from(new Set(missing)) };
+  }
+
+  function renderPreviewPane() {
+    const root = document.getElementById("previewPane");
+    if (!root) return;
+    const pages = previewPages();
+    if (!pages.length) {
+      root.innerHTML = '<div class="preview-empty"><h3>Chưa có trang HTML</h3><p>Tạo một tệp .html trong tab Files để xem ngay tại đây.</p></div>';
+      return;
+    }
+    if (!state.previewPath || pages.indexOf(state.previewPath) === -1) {
+      state.previewPath = pages.indexOf("index.html") > -1 ? "index.html" : pages[0];
+    }
+    const built = buildPreviewDocument(state.previewPath);
+    const options = pages.map((path) =>
+      '<option value="' + esc(path) + '"' + (path === state.previewPath ? " selected" : "") + ">" + esc(path) + "</option>"
+    ).join("");
+    const widths = [["auto", "Tự động"], ["768", "Tablet"], ["390", "Điện thoại"]];
+    const warning = built.missing.length
+      ? '<p class="preview-warning">Thiếu ' + built.missing.map((ref) => "<code>" + esc(ref) + "</code>").join(", ") + " trong thư mục làm việc nên trang có thể mất định dạng hoặc tương tác.</p>"
+      : "";
+    root.innerHTML =
+      '<div class="preview-bar"><div class="preview-left">' +
+      '<span class="preview-live"><i></i>Thư mục làm việc</span>' +
+      '<label class="preview-pick"><span>Trang</span><select id="previewPage">' + options + "</select></label></div>" +
+      '<div class="preview-right"><div class="preview-widths" role="group" aria-label="Khung xem trước">' +
+      widths.map(([id, label]) => '<button type="button" data-preview-width="' + id + '" aria-pressed="' + (state.previewWidth === id ? "true" : "false") + '" class="' + (state.previewWidth === id ? "active" : "") + '">' + label + "</button>").join("") +
+      '</div><button type="button" class="btn small ghost" id="previewReload">Tải lại</button></div></div>' +
+      warning +
+      '<div class="preview-canvas"><iframe class="preview-frame" id="previewFrame" data-width="' + esc(state.previewWidth) + '" title="Xem trước ' + esc(state.previewPath) + '" sandbox="allow-scripts allow-forms"></iframe></div>' +
+      '<p class="preview-note">Xem thư mục làm việc đã lưu, kể cả thay đổi chưa commit. Nhớ bấm Lưu tệp trước khi xem. Liên kết trang chạy trong khung; menu Bootstrap và biểu mẫu hoạt động.</p>';
+    const frame = document.getElementById("previewFrame");
+    if (frame) frame.srcdoc = built.html;
   }
 
   /* ---------------- Sơ đồ và reflog ---------------- */
@@ -1303,6 +1436,16 @@
     const progress = $("#globalProgress");
     if (progress) progress.addEventListener("click", () => navigate("#/"));
     window.addEventListener("hashchange", route);
+    window.addEventListener("message", (event) => {
+      if (!event.data || event.data.type !== "felab:preview-nav") return;
+      const frame = document.getElementById("previewFrame");
+      if (!frame || event.source !== frame.contentWindow) return;
+      const path = String(event.data.path || "");
+      if (previewPages().includes(path)) {
+        state.previewPath = path;
+        renderPreviewPane();
+      }
+    });
     route();
   });
 })();
