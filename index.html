@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FELab · Git và GitHub cho nhóm làm web</title>
+  <meta name="description" content="Phòng lab tương tác 15 kịch bản frontend cho nhóm ba người: dựng website Mộc Coffee bằng HTML, CSS, JavaScript và Bootstrap 5, làm việc qua nhánh, commit, pull request, review, ci/pages và phát hành.">
+  <meta name="theme-color" content="#6f4e37">
+  <link rel="stylesheet" href="css/styles.css?v=4">
+</head>
+<body data-view="home">
+  <a class="skip-link" href="#app">Bỏ qua điều hướng</a>
+  <header class="topbar">
+    <a class="brand" href="#/" aria-label="FELab, về trang chủ">
+      <span class="brand-mark" aria-hidden="true">FE</span>
+      <span class="brand-text"><strong>FELab</strong><small>Frontend · HTML CSS JS · nhóm 3 người</small></span>
+    </a>
+    <nav class="topnav" aria-label="Điều hướng chính">
+      <a href="#/" data-route="lab">Phòng lab</a>
+      <a href="#/conventions" data-route="conventions">Phân công</a>
+      <a href="#/cheats" data-route="cheats">Cheatsheet</a>
+    </nav>
+    <div class="topbar-tools">
+      <label class="role-pick">
+        <span>Thao tác vai</span>
+        <select id="roleSelect" aria-label="Chọn vai thao tác"></select>
+      </label>
+      <button type="button" class="progress-pill" id="globalProgress">Tiến độ 0/15</button>
+    </div>
+  </header>
+  <main id="app"></main>
+  <footer class="site-foot">
+    <p><strong>FELab</strong> · CSE122 · Kho mô phỏng chạy hoàn toàn trên trình duyệt, không kết nối GitHub thật.</p>
+    <p>Sản phẩm mẫu Mộc Coffee · Sprint 01 · 2026</p>
+  </footer>
+  <noscript><div class="noscript">FELab cần JavaScript để mô phỏng Git và GitHub. Hãy bật JavaScript rồi tải lại trang.</div></noscript>
+  <div id="toastRoot" class="toast-root" aria-live="polite"></div>
+  <div id="modalRoot"></div>
+
+  <script src="js/data.js?v=4"></script>
+  <script src="js/engine.js?v=4"></script>
+  <script src="js/scenarios.js?v=4"></script>
+  <script src="js/graph.js?v=4"></script>
+  <script src="js/app.js?v=4"></script>
+</body>
+</html>
